@@ -1,0 +1,57 @@
+Turbo Assembler	 Version 3.1	    03/12/17 23:36:01	    Page 1
+hw.bat
+
+
+
+      1	    0000				 .model	tiny
+      2						 .386
+      3	    0000				 .code
+      4						 org 100h
+      5	    0100			 _:
+      6	    0100  EB 10				 jmp start
+      7	    0102  48 65	6C 6C 6F 2C 20+	 mes	 db "Hello, World!",13,10,'$'
+      8		  57 6F	72 6C 64 21 0D+
+      9		  0A 24
+     10
+     11	    0112			 start:
+     12	    0112  BA 0102r			 lea dx, mes
+     13	    0115  B4 09				 mov ah, 09h
+     14	    0117  CD 21				 int 21h
+     15
+     16	    0119  C3				 ret
+     17
+     18					 end _
+Turbo Assembler	 Version 3.1	    03/12/17 23:36:01	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "03/12/17"
+??FILENAME			  Text	 "hw	  "
+??TIME				  Text	 "23:36:01"
+??VERSION			  Number 030A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 HW
+@INTERFACE			  Text	 00H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+MES				  Byte	 DGROUP:0102
+START				  Near	 DGROUP:0112
+_				  Near	 DGROUP:0100
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  011A Word	  Public  CODE
+
