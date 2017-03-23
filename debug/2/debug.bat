@@ -14,11 +14,12 @@ error_mes	db "ERROR!!!", 13, 10, '$'
 
 addr 		db "____:____-__", 13, 10, '$'
 handle		dw 0
-breakpoint	db 0h
+breakpoint	db 0
 
 int3_handler:
 	push bp	
 	mov bp, sp
+	add bp, 2 ; save ptr on ip
 
 	push ds
 	push di
@@ -28,13 +29,31 @@ int3_handler:
 	push cs
 	pop ds
 	
-	dec [bp + 2]
+	call print_addr
+	call set_old_code
+
+	pop dx
+	pop ax
+	pop di
+	pop ds
+	pop bp
+	iret
+
+set_old_code:
+	mov es, [bp + 2]
+	mov di, [bp]
+	mov al, breakpoint
+	mov [es:di], al
+	ret
+
+print_addr:
+	dec word ptr [bp]
 
 	lea di, addr
-	mov ax, [bp + 4]
+	mov ax, [bp + 2]
 	call save_hex_word
 	inc di
-	mov ax, [bp + 2]
+	mov ax, [bp]
 	call save_hex_word
 	inc di
 	mov al, breakpoint	
@@ -42,19 +61,7 @@ int3_handler:
 
 	lea dx, addr
 	call print_message
-
-	mov es, [bp + 4]
-	mov di, [bp + 2]
-	mov al, breakpoint
-	mov [es:di], al
-
-	pop dx
-	pop ax
-	pop di
-	pop ds
-	pop bp
-
-	iret
+	ret
 
 save_hex_word:
 	xchg ah, al
@@ -62,7 +69,6 @@ save_hex_word:
 
 	xchg ah, al
 	call save_hex_byte
-
 	ret
 
 save_hex_byte:
@@ -72,7 +78,6 @@ save_hex_byte:
 
 	pop ax
 	call save_hex_digit
-
 	ret
 
 save_hex_digit:
@@ -83,7 +88,6 @@ save_hex_digit:
 	das
 	stosb
 	pop ax
-
 	ret
 
 start:
@@ -100,22 +104,19 @@ start:
 
 	call prepare_for_return
 	call prepare_addr_for_hw
-
 	retf
 
 set_int3_handler:
 	mov ah, 25h
 	mov al, 03h
 	lea dx, int3_handler
-	int 21h
-	
+	int 21h	
 	ret
 
 set_brakpoint:
 	mov al, [buffer + 12h]	
 	mov [buffer + 12h], 0cch
 	mov breakpoint, al
-
 	ret
 
 prepare_addr_for_hw:
@@ -133,7 +134,6 @@ prepare_addr_for_hw:
 	pop ds 
 
 	push dx
-
 	ret	
 
 prepare_for_return:
@@ -146,7 +146,6 @@ prepare_for_return:
 	push 0 
 
 	push dx
-
 	ret
 
 read_file_into_buffer:
@@ -155,7 +154,6 @@ read_file_into_buffer:
 	mov cx, 100h
 	lea dx, buffer
 	int 21h
-
 	ret
 
 open_file:
@@ -166,7 +164,6 @@ open_file:
 	
 	jc error
 	mov handle, ax
-
 	ret
 
 close_file:
@@ -175,29 +172,22 @@ close_file:
 	int 21h	
 	
 	jc error
-
 	ret
 
 print_message:
 	mov ah, 09h
 	int 21h
-
 	ret
-
-
 
 after_debug:
 	push cs
 	pop ds
 	lea dx, end_mes
 	call print_message
-
 	ret
-
 
 error:
 	lea dx, error_mes
-
 	call print_message
 	int 20h
 

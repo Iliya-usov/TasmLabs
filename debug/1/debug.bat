@@ -19,6 +19,7 @@ handle		dw 0
 int1_handler:
 	push bp	
 	mov bp, sp
+	add bp, 2 ;save ptr on ip
 
 	push ds
 	push di
@@ -28,23 +29,26 @@ int1_handler:
 	push cs
 	pop ds
 
-	lea di, addr
-	mov ax, [bp + 4]
-	call save_hex_word
-	inc di
-	mov ax, [bp + 2]
-	call save_hex_word
-
-	lea dx, addr
-	call print_message
+	call print_addr
 
 	pop dx
 	pop ax
 	pop di
 	pop ds
 	pop bp
-
 	iret
+
+print_addr:
+	lea di, addr
+	mov ax, [bp + 2]
+	call save_hex_word
+	inc di
+	mov ax, [bp]
+	call save_hex_word
+
+	lea dx, addr
+	call print_message
+	ret
 
 save_hex_word:
 	xchg ah, al
@@ -52,7 +56,6 @@ save_hex_word:
 
 	xchg ah, al
 	call save_hex_byte
-
 	ret
 
 save_hex_byte:
@@ -62,7 +65,6 @@ save_hex_byte:
 
 	pop ax
 	call save_hex_digit
-
 	ret
 
 save_hex_digit:
@@ -73,7 +75,6 @@ save_hex_digit:
 	das
 	stosb
 	pop ax
-
 	ret
 
 start:
@@ -86,22 +87,20 @@ start:
 
 	call set_int1_handler
 
-	call prepare_for_return
-	call prepare_addr_for_hw
+	call set_after_debug
+	call set_addr_for_hw
 
 	call set_tf
-
 	retf
 
 set_int1_handler:
 	mov ah, 25h
 	mov al, 01h
 	lea dx, int1_handler
-	int 21h
-	
+	int 21h	
 	ret
 
-prepare_addr_for_hw:
+set_addr_for_hw:
 	pop dx
 
 	lea ax, psp
@@ -116,10 +115,9 @@ prepare_addr_for_hw:
 	pop ds 
 
 	push dx
-
 	ret
 
-prepare_for_return:
+set_after_debug:
 	pop dx
 
 	pushf
@@ -129,7 +127,6 @@ prepare_for_return:
 	push 0 
 
 	push dx
-
 	ret
 
 set_tf:
@@ -142,7 +139,6 @@ set_tf:
 	push ax 
 	push cs  
 	push dx 
-
 	iret
 
 read_file_into_buffer:
@@ -151,7 +147,6 @@ read_file_into_buffer:
 	mov cx, 100h
 	lea dx, buffer
 	int 21h
-
 	ret
 
 open_file:
@@ -162,7 +157,6 @@ open_file:
 	
 	jc error
 	mov handle, ax
-
 	ret
 
 close_file:
@@ -171,26 +165,23 @@ close_file:
 	int 21h	
 	
 	jc error
-
 	ret
 
 print_message:
 	mov ah, 09h
 	int 21h
-
 	ret
 
 after_debug:
 	push cs
 	pop ds
+
 	lea dx, end_mes
 	call print_message
-
 	ret
 
 error:
 	lea dx, error_mes
-
 	call print_message
 	int 20h
 
