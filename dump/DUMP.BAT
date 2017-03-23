@@ -37,7 +37,7 @@ print_line:
   call print_pipeline
   call print_space
 
-  call print_mem    
+  call print_memory    
   ret
 
 print_addr:
@@ -66,13 +66,14 @@ print_pipeline:
   stosw
   ret
 
-print_mem:
+print_memory:
   push cx
   mov cx, 8
 
   print_word:
     mov ax, word ptr [ds:bx]
-    xchg ah, al
+
+    xchg ah, al  ;little-endian  
     call print_hex_word
 
     call print_space
@@ -119,9 +120,9 @@ listen:
   je up
   cmp ah, 50h  ;down
   je down
-  cmp ah, 49h  ;pg up
+  cmp ah, 49h  ;pgup
   je pgup
-  cmp ah, 51h  ;pg down
+  cmp ah, 51h  ;pgdn
   je pgdn
   jmp listen
 reboot:
