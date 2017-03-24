@@ -14,7 +14,7 @@ error_mes	db "ERROR!!!", 13, 10, '$'
 
 addr 		db "____:____-__", 13, 10, '$'
 handle		dw 0
-breakpoint	db 0
+old_code	db 0
 
 int3_handler:
 	push bp	
@@ -29,6 +29,8 @@ int3_handler:
 	push cs
 	pop ds
 	
+	dec word ptr [bp]
+	
 	call print_addr
 	call set_old_code
 
@@ -42,13 +44,11 @@ int3_handler:
 set_old_code:
 	mov es, [bp + 2]
 	mov di, [bp]
-	mov al, breakpoint
+	mov al, old_code
 	mov [es:di], al
 	ret
 
 print_addr:
-	dec word ptr [bp]
-
 	lea di, addr
 	mov ax, [bp + 2]
 	call save_hex_word
@@ -56,7 +56,7 @@ print_addr:
 	mov ax, [bp]
 	call save_hex_word
 	inc di
-	mov al, breakpoint	
+	mov al, old_code	
 	call save_hex_byte
 
 	lea dx, addr
@@ -116,7 +116,7 @@ set_int3_handler:
 set_brakpoint:
 	mov al, [buffer + 12h]	
 	mov [buffer + 12h], 0cch
-	mov breakpoint, al
+	mov old_code, al
 	ret
 
 prepare_addr_for_hw:
